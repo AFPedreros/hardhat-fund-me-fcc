@@ -1,4 +1,5 @@
 const { network } = require("hardhat")
+const { verify } = require("../utils/verify.js")
 const {
     networkConfig,
     developmentChain,
@@ -9,19 +10,29 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
 
-    let ethUsdPriceFeeAddress
+    let ethUsdPriceFeedAddress
     if (developmentChain.includes(network.name)) {
         const ethUsdAggregator = await deployments.get("MockV3Aggregator")
-        ethUsdPriceFeeAddress = ethUsdAggregator.address
+        ethUsdPriceFeedAddress = ethUsdAggregator.address
     } else {
-        ethUsdPriceFeeAddress = networkConfig[chainId]["ethUsdPriceFeed"]
+        ethUsdPriceFeedAddress = networkConfig[chainId]["ethUsdPriceFeed"]
     }
-
+    log("----------------------------------------------------------")
+    log("Deploying FundMe and waiting for confirmations...")
     const fundMe = await deploy("FundMe", {
         from: deployer,
-        args: [ethUsdPriceFeeAddress], // put price fee address
-        log: true,
+        args: [ethUsdPriceFeedAddress], // put price fee address
+        log: false,
+        waitConfirmations: network.config.blockConfirmations || 1,
     })
+    log(`FundMe deployed at ${fundMe.address}`)
+
+    if (
+        !developmentChain.includes(network.name) &&
+        process.env.ETHERSCAN_API_KEY
+    ) {
+        await verify(fundMe.address, [ethUsdPriceFeedAddress])
+    }
     log("----------------------------------------------------------")
 }
 module.exports.tags = ["all", "fundme"]
