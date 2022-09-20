@@ -9,9 +9,6 @@ library PriceConverter {
         view
         returns (uint256)
     {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(
-            0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e
-        );
         (, int256 answer, , , ) = priceFeed.latestRoundData();
         return uint256(answer * 10000000000);
     }

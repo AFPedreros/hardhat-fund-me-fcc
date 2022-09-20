@@ -31,19 +31,11 @@ contract FundMe {
         priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
-    receive() external payable {
-        fund();
-    }
-
-    fallback() external payable {
-        fund();
-    }
-
     /**
      * @notice Funds our contract based on the ETH/USD price
      */
     function fund() public payable {
-        require(
+       require(
             msg.value.getConversionRate(priceFeed) >= MINIMUM_USD,
             "You need to spend more ETH!"
         );
